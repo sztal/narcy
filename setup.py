@@ -47,8 +47,6 @@ setup(
     include_package_data=True,
     install_requires=[
         'spacy>=2.0.18',
-        'en_core_web_sm>=2.0.0',
-        'en_core_web_md>=2.0.0',
         'pandas>=0.23.4'
     ],
     license='MIT',

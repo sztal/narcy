@@ -12,6 +12,15 @@
 from natural language and narrative analysis. It is based on the powerful
 Spacy_ NLP library.
 
+Installation
+============
+
+.. code-block:: bash
+
+    pip install git+https://github.com/sztal/narcy.git
+    python -m spacy download en_core_web_sm
+
+
 Narrative analysis
 ==================
 
