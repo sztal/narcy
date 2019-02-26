@@ -126,7 +126,6 @@ def get_relation(head, sub):
         tense, mode = sub._.tense
     return Relation(tense, mode, rel, rtype, head, sub)
 
-
 def get_compound_verb(token):
     """Get compound verb from a verb token."""
     next_token = token
@@ -164,12 +163,13 @@ def get_compound_noun(token):
             break
     end = next_token._.si
     prev_token = token
+    start = prev_token._.si
     while prev_token._.is_in_compound_noun:
+        start = prev_token._.si
         try:
             prev_token = prev_token.nbor(-1)
         except IndexError:
             break
-    start = prev_token._.si + 1
     while token.sent[start]._.is_det and start < end - 1:
         start += 1
     return token.sent[start:end]
@@ -182,11 +182,19 @@ def get_entity_from_span(span):
         return None
     start = start_token.i
     end = start_token.i
-    token = start_token.nbor(1)
-    while token.ent_iob_ == 'I':
-        end = token.i
-        token = token.nbor(1)
-    if start_token.ent_iob_ != 'B':
+    token = start_token
+    if start_token.ent_iob_ in ('B', 'I'):
+        try:
+            token = start_token.nbor(1)
+        except IndexError:
+            token = start_token
+        while token.ent_iob_ == 'I':
+            end = token.i
+            try:
+                token = token.nbor(1)
+            except IndexError:
+                break
+    if start_token.ent_iob_ == 'I':
         token = start_token
         while True:
             token = token.nbor(-1)

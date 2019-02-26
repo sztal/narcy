@@ -45,9 +45,11 @@ def pytest_collection_modifyitems(config, items):
 # Fixtures --------------------------------------------------------------------
 
 @pytest.fixture(scope='session')
-def doc():
-    with open(os.path.join(_dirpath, 'cop24.txt')) as stream:
-        text = stream.read()
+def docs():
     nlp = en_core_web_sm.load()
-    document = make_doc(nlp, text)
-    return document
+    documents = []
+    for text in os.listdir(_dirpath):
+        with open(os.path.join(_dirpath, text)) as stream:
+            d = make_doc(nlp, stream.read().strip())
+        documents.append(d)
+    return documents

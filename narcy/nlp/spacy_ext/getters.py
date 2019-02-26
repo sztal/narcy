@@ -4,6 +4,7 @@ from itertools import product
 from spacy.symbols import NOUN, PROPN, PRON, DET
 from spacy.symbols import VERB, PART
 from spacy.symbols import ADV, ADJ, ADP
+from spacy.symbols import SPACE
 from ..utils import get_compound_verb, get_compound_noun, get_entity_from_span
 from ..utils import get_relation, detect_tense, make_hash
 from ..tenses import PRESENT, NORMAL
@@ -13,6 +14,7 @@ _NOUN = (NOUN, PROPN)
 _NOUNLIKE = _NOUN
 _VERB = (VERB,)
 _VERB_DESC = (ADV, ADJ)
+_NONWORDS = (SPACE,)
 
 _AUX = ('aux',)
 _NSUBJ = ('nsubj', 'nsubjpass')
@@ -40,7 +42,7 @@ _ENT = ('B', 'I')
 # Token extensions ------------------------------------------------------------
 
 is_wordlike_t_g = lambda t: not t.is_punct and not t.like_num \
-    and not t.tag_ in _TAGS_POSS
+    and not t.tag_ in _TAGS_POSS and t.pos not in _NONWORDS
 is_semantic_t_g = lambda t: t._.is_wordlike and t.pos not in _NOT_SEMANTIC \
     and t.dep_ not in _POSSESIVES
 is_drive_t_g = lambda t: t._.compound._.drive == t
@@ -48,8 +50,8 @@ is_root_t_g = lambda t: t._.compound.root == t
 
 is_noun_t_g = lambda t: t.pos in _NOUN
 is_nounlike_t_g = lambda t: t._.is_noun
-is_in_compound_noun_t_g = lambda t: t._.is_compound_dep \
-    or any(c._.is_compound_dep for c in t.children)
+is_in_compound_noun_t_g = lambda t: (t._.is_compound_dep \
+    or any(c._.is_compound_dep for c in t.children))
 is_verb_t_g = lambda t: t.pos in _VERB and t.dep_ not in _NONVERB_DEP \
     and not t.dep_ in _SUBJ and not t._.is_adj_verb
 is_verblike_t_g = lambda t: t._.is_verb  or t._.is_part or t._.is_prep_dep \
