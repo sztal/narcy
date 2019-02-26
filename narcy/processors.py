@@ -14,12 +14,16 @@ Record = namedtuple('Record', [
     'head_ent', 'head_ent_label', 'sub_ent', 'sub_ent_label',
     'head_vector_norm', 'sub_vector_norm', 'head_vector', 'sub_vector',
     'head_start', 'head_end', 'sub_start', 'sub_end',
+    'sentiment', 'sent_sentiment',
+    'valence', 'sent_valence',
     'docid', 'sentid'
 ])
 
 SVO = namedtuple('SVO', [
     'tense', 'mode', 'neg', 'rtype',
-    'subj', 'subj_terms', 'verb', 'obj', 'obj_terms'
+    'subj', 'subj_terms', 'verb', 'obj', 'obj_terms',
+    'sentiment', 'sent_sentiment',
+    'valence', 'sent_valence'
 ])
 
 SVORecord = namedtuple('SVORecord', [
@@ -31,6 +35,8 @@ SVORecord = namedtuple('SVORecord', [
     'subj_terms', 'obj_terms',
     'subj_vector_norm', 'verb_vector_norm', 'obj_vector_norm',
     'subj_vector', 'verb_vector', 'obj_vector',
+    'sentiment', 'sent_sentiment',
+    'valence', 'sent_valence',
     'docid', 'sentid'
 ])
 
@@ -55,6 +61,8 @@ def relation_to_record(r, docid=None, sentid=None):
     sub_text = r.sub.text.lower()
     head = r.head
     sub = r.sub
+    sent = head.sent
+    rel = sent[min(head.start, sub.start):max(head.end, sub.end)]
     sub_tense, sub_mode = sub._.lead._.tense
     head_pos, head_dep, sub_pos, sub_dep = \
         tuple(y for x in r.rel.split('=>') for y in x.split('.'))
@@ -90,6 +98,10 @@ def relation_to_record(r, docid=None, sentid=None):
         head_end=head.end,
         sub_start=sub.start,
         sub_end=sub.end,
+        sentiment=rel._.sentiment,
+        sent_sentiment=sent._.sentiment,
+        valence=rel._.valence,
+        sent_valence=sent._.valence,
         docid=docid,
         sentid=sentid
     )
@@ -188,16 +200,34 @@ def get_svos(relations):
                 rtype = 'svo'
             else:
                 rtype = 'svc'
+            subj_terms = tuple(takewhile(lambda t: t != verb, subj._.drive._.subterms))
+            obj_terms = tuple(st for st in obj._.drive._.subterms if st != verb)
+            start = min(
+                subj.start, verb.start, obj.start,
+                *[ t.start for t in subj_terms ],
+                *[ t.start for t in obj_terms ]
+            )
+            end = max(
+                subj.end, verb.end, obj.end,
+                *[ t.end for t in subj_terms ],
+                *[ t.end for t in obj_terms ]
+            )
+            sent = subj.sent
+            rel = sent[start:end]
             yield SVO(
                 tense=tense,
                 mode=mode,
                 neg=neg,
                 rtype=rtype,
                 subj=subj,
-                subj_terms=tuple(takewhile(lambda t: t != verb, subj._.drive._.subterms)),
+                subj_terms=subj_terms,
                 verb=verb,
                 obj=obj,
-                obj_terms=tuple(st for st in obj._.drive._.subterms if st != verb)
+                obj_terms=obj_terms,
+                sentiment=rel._.sentiment,
+                sent_sentiment=sent._.sentiment,
+                valence=rel._.valence,
+                sent_valence=sent._.valence
             )
 
 def svo_to_record(svo, docid=None, sentid=None):
@@ -238,6 +268,10 @@ def svo_to_record(svo, docid=None, sentid=None):
         subj_vector=svo.subj.vector,
         verb_vector=svo.verb.vector,
         obj_vector=svo.obj.vector,
+        sentiment=svo.sentiment,
+        sent_sentiment=svo.sent_sentiment,
+        valence=svo.valence,
+        sent_valence=svo.sent_valence,
         docid=svo.verb.doc._.id if not docid else docid,
         sentid=svo.verb.sent._.id if not sentid else sentid
     )

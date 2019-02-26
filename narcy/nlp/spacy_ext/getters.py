@@ -5,9 +5,12 @@ from spacy.symbols import NOUN, PROPN, PRON, DET
 from spacy.symbols import VERB, PART
 from spacy.symbols import ADV, ADJ, ADP
 from spacy.symbols import SPACE
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from ..utils import get_compound_verb, get_compound_noun, get_entity_from_span
 from ..utils import get_relation, detect_tense, make_hash
 from ..tenses import PRESENT, NORMAL
+
+vader = SentimentIntensityAnalyzer()
 
 _NOT_SEMANTIC = (DET, PRON, PART)
 _NOUN = (NOUN, PROPN)
@@ -262,6 +265,21 @@ def id_s_g(span):
 def lang_s_g(span):
     return span.doc.vocab.lang
 
+def polarity_s_g(span):
+    _polarity = span._._polarity
+    if not _polarity:
+        _polarity = vader.polarity_scores(span.text)
+        span._.set('polarity', _polarity)
+    return _polarity
+
+def valence_s_g(span):
+    scores = span._.polarity
+    return (scores['pos']**.5 - scores['neg']**5) * (1 - scores['neu'])**.5
+
+def sentiment_s_g(span):
+    scores = span._.polarity
+    return scores['compound']*(1 - scores['neu'])
+
 
 # Doc extensions --------------------------------------------------------------
 
@@ -275,3 +293,18 @@ def id_d_g(doc):
 def relations_d_g(doc):
     for sent in doc.sents:
         yield from sent._.relations
+
+def polarity_d_g(doc):
+    _polarity = doc._._polarity
+    if not _polarity:
+        _polarity = vader.polarity_scores(doc.text)
+        doc._.set('polarity', _polarity)
+    return _polarity
+
+def valence_d_g(doc):
+    scores = doc._.polarity
+    return (scores['pos']**.5 - scores['neg']**5) * (1 - scores['neu'])**.5
+
+def sentiment_d_g(doc):
+    scores = doc._.polarity
+    return scores['compound']*(1 - scores['neu'])

@@ -18,22 +18,19 @@ def get_docs():
         documents.append(d)
     return documents
 
-def _test_relations(docs, reduced):
-    for doc in docs:
-        relations = doc._.relations
-        if reduced:
-            relations = reduce_relations(relations)
-        for relation in relations:
-            assert isinstance(relation, Relation)
+def _test_relations(doc, reduced):
+    relations = doc._.relations
+    if reduced:
+        relations = reduce_relations(relations)
+    for relation in relations:
+        assert isinstance(relation, Relation)
 
-def _test_doc_to_relations_df(docs, reduced):
-    for doc in docs:
-        df = doc_to_relations_df(doc, reduced=reduced)
-        assert isinstance(df, pd.DataFrame)
-        assert df.shape != (0, 0)
+def _test_doc_to_relations_df(doc, reduced):
+    df = doc_to_relations_df(doc, reduced=reduced)
+    assert isinstance(df, pd.DataFrame)
+    assert df.shape != (0, 0)
 
-def _test_doc_to_svos_df(docs):
-    for doc in docs:
-        df = doc_to_svos_df(doc)
-        assert isinstance(df, pd.DataFrame)
-        assert df.shape != (0, 0)
+def _test_doc_to_svos_df(doc):
+    df = doc_to_svos_df(doc)
+    assert isinstance(df, pd.DataFrame)
+    assert df.shape != (0, 0)

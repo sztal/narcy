@@ -1,7 +1,7 @@
 """*PyTest* configuration and general purpose fixtures."""
 # pylint: disable=W0611
 import pytest
-from . import get_docs
+import en_core_web_sm
 
 
 def pytest_addoption(parser):
@@ -41,5 +41,5 @@ def pytest_collection_modifyitems(config, items):
 # Fixtures --------------------------------------------------------------------
 
 @pytest.fixture(scope='session')
-def docs():
-    return get_docs()
+def nlp():
+    return en_core_web_sm.load()
