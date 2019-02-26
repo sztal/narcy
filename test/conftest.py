@@ -1,12 +1,8 @@
 """*PyTest* configuration and general purpose fixtures."""
 # pylint: disable=W0611
-import os
 import pytest
-import en_core_web_sm
-from narcy.nlp import spacy_ext
-from narcy.nlp.utils import make_doc
+from . import get_docs
 
-_dirpath = os.path.join(os.path.split(__file__)[0], 'data')
 
 def pytest_addoption(parser):
     """Custom `pytest` command-line options."""
@@ -46,10 +42,4 @@ def pytest_collection_modifyitems(config, items):
 
 @pytest.fixture(scope='session')
 def docs():
-    nlp = en_core_web_sm.load()
-    documents = []
-    for text in os.listdir(_dirpath):
-        with open(os.path.join(_dirpath, text)) as stream:
-            d = make_doc(nlp, stream.read().strip())
-        documents.append(d)
-    return documents
+    return get_docs()
