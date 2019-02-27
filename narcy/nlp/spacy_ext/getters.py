@@ -1,10 +1,11 @@
 """Getters for extension attributes defined on *Spacy* objects."""
 # pylint: disable=E0611,C0321,W0212
+import re
 from itertools import product
 from spacy.symbols import NOUN, PROPN, PRON, DET
 from spacy.symbols import VERB, PART
 from spacy.symbols import ADV, ADJ, ADP
-from spacy.symbols import SPACE
+from spacy.symbols import SPACE, PUNCT
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from ..utils import get_compound_verb, get_compound_noun, get_entity_from_span
 from ..utils import get_relation, detect_tense, make_hash
@@ -34,6 +35,7 @@ _OBJ = ('obj', 'pobj', 'dobj')
 _COMPOUND = ('compound',)
 _COMPLEMENT = ('acomp',)
 _ATTR = ('attr',)
+_CASE = ('case',)
 
 _TAGS_PART = ('VBN', 'VBD', 'VBG')
 _TAGS_INF = ('VB',)
@@ -41,6 +43,12 @@ _TAGS_POSS = ('POS',)
 _TAGS_COMPOUND = ('HYPH',)
 
 _ENT = ('B', 'I')
+
+# Regular expressions
+_RX_BE = re.compile(r"^\W(s|re)$", re.IGNORECASE)
+_RX_HAVE = re.compile(r"^\Wve$", re.IGNORECASE)
+_RX_WILL = re.compile(r"^\Wll$", re.IGNORECASE)
+_RX_NOT = re.compile(r"^n\Wt$", re.IGNORECASE)
 
 # Token extensions ------------------------------------------------------------
 
@@ -67,6 +75,7 @@ is_auxpart_t_g = lambda t: t._.is_part and t._.is_aux_dep
 is_adp_t_g = lambda t: t.pos == ADP
 is_adj_t_g = lambda t: t.pos == ADJ
 is_adv_t_g = lambda t: t.pos == ADV
+is_punct_t_g = lambda t: t.pos == PUNCT or (t.pos == PART and t.dep_ in _CASE)
 
 is_description_t_g = lambda t: t._.is_adj or t._.is_adv or t._.is_adj_verb
 is_term_t_g = lambda t: t._.is_drive and t._.is_semantic \
@@ -147,6 +156,23 @@ def subterms_t_g(token):
     for st in token.subtree:
         if st._.is_term and st not in token._.compound:
             yield st._.compound
+
+def lemma_t_g(token):
+    if token._.is_verb:
+        if _RX_BE.match(token.text):
+            return 'be'
+        if _RX_HAVE.match(token.text):
+            return 'have'
+        if _RX_WILL.match(token.text):
+            return 'will'
+    if token._.is_neg_dep and _RX_NOT.match(token.text):
+        return 'not'
+    if token.pos == SPACE:
+        return ' '
+    return token.lemma_
+
+def lemma_with_sep_t_g(token):
+    return token._.lemma if token._.is_punct else " "+token._.lemma
 
 
 # Span extensions -------------------------------------------------------------
@@ -242,7 +268,7 @@ def lead_s_g(span):
         return span.sent[start:end]
     return span
 
-def lemma_s_g(span):
+def lead_lemma_s_g(span):
     drive = span._.drive
     if drive._.is_verb:
         neg = any(t._.is_neg_dep for t in reversed(span))
@@ -274,7 +300,7 @@ def polarity_s_g(span):
 
 def valence_s_g(span):
     scores = span._.polarity
-    return (scores['pos']**.5 - scores['neg']**5) * (1 - scores['neu'])**.5
+    return (scores['pos']**.5 - scores['neg']**.5) * (1 - scores['neu'])**.5
 
 def sentiment_s_g(span):
     scores = span._.polarity
@@ -294,6 +320,8 @@ def tokens_s_g(span):
             yield token
         i = token._.end
 
+def lemma_s_g(span):
+    return "".join(t._.lemma_with_sep for t in span).strip()
 
 # Doc extensions --------------------------------------------------------------
 
@@ -317,7 +345,7 @@ def polarity_d_g(doc):
 
 def valence_d_g(doc):
     scores = doc._.polarity
-    return (scores['pos']**.5 - scores['neg']**5) * (1 - scores['neu'])**.5
+    return (scores['pos']**.5 - scores['neg']**.5) * (1 - scores['neu'])**.5
 
 def sentiment_d_g(doc):
     scores = doc._.polarity
@@ -326,3 +354,6 @@ def sentiment_d_g(doc):
 def tokens_d_g(doc):
     for sent in doc.sents:
         yield from sent._.tokens
+
+def lemma_d_g(doc):
+    return " ".join(s._.lemma for s in doc.sents)

@@ -42,7 +42,8 @@ SVORecord = namedtuple('SVORecord', [
 
 Token = namedtuple('Token', [
     'tense', 'mode', 'neg',
-    'token', 'lead', 'lemma',
+    'token', 'lemma',
+    'lead', 'lead_lemma',
     'pos', 'dep',
     'ent', 'ent_label',
     'vector_norm', 'vector',
@@ -310,8 +311,9 @@ def get_tokens(doc):
             mode=mode,
             neg=token._.is_neg,
             token=token.text.lower(),
-            lead=token.text.lower(),
             lemma=token.lemma_,
+            lead=token._.lead.text.lower(),
+            lead_lemma=token._.lead.lemma_,
             pos=token._.drive.pos_,
             dep=token._.drive.dep_,
             ent=token._.is_ent,

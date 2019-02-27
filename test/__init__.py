@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import en_core_web_sm
 from narcy.nlp import spacy_ext
-from narcy.nlp.utils import make_doc, Relation
+from narcy.nlp.utils import Relation, make_doc
 from narcy.processors import reduce_relations
 from narcy.processors import doc_to_relations_df, doc_to_svos_df
 from narcy.processors import doc_to_tokens_df
@@ -15,8 +15,8 @@ def get_docs():
     documents = []
     for text in os.listdir(_dirpath):
         with open(os.path.join(_dirpath, text)) as stream:
-            d = make_doc(nlp, stream.read().strip())
-        documents.append(d)
+            doc = make_doc(nlp, stream.read().strip())
+        documents.append(doc)
     return documents
 
 def _test_relations(doc, reduced):
