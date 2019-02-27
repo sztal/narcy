@@ -40,29 +40,36 @@ SVORecord = namedtuple('SVORecord', [
     'docid', 'sentid'
 ])
 
+Token = namedtuple('Token', [
+    'tense', 'mode', 'neg',
+    'token', 'lead', 'lemma',
+    'pos', 'dep',
+    'ent', 'ent_label',
+    'vector_norm', 'vector',
+    'start', 'end',
+    'sentiment', 'sent_sentiment',
+    'valence', 'sent_valence',
+    'docid', 'sentid'
+])
 
-def relation_to_record(r, docid=None, sentid=None):
+
+def relation_to_record(r):
     """Convert relation to record.
 
     Parameters
     ----------
     r : tuple
         Relation tuple.
-    docid : str or None
-        Document id. Determined automatically if ``None``.
-    sentid : str or None
-        Sentence id. Determined automatically if ``None``.
     """
-    if not docid:
-        docid = r.head.doc._.id
-    if not sentid:
-        sentid = r.head.sent._.id
-    head_text = r.head.text.lower()
-    sub_text = r.sub.text.lower()
     head = r.head
     sub = r.sub
-    sent = head.sent
-    rel = sent[min(head.start, sub.start):max(head.end, sub.end)]
+    sent = r.head.sent
+    doc = sent.doc
+    docid = doc._.id
+    sentid = sent._.id
+    head_text = r.head.text.lower()
+    sub_text = r.sub.text.lower()
+    rel = doc[min(head.start, sub.start):max(head.end, sub.end)]
     sub_tense, sub_mode = sub._.lead._.tense
     head_pos, head_dep, sub_pos, sub_dep = \
         tuple(y for x in r.rel.split('=>') for y in x.split('.'))
@@ -213,7 +220,8 @@ def get_svos(relations):
                 *[ t.end for t in obj_terms ]
             )
             sent = subj.sent
-            rel = sent[start:end]
+            doc = sent.doc
+            rel = doc[start:end]
             yield SVO(
                 tense=tense,
                 mode=mode,
@@ -230,26 +238,22 @@ def get_svos(relations):
                 sent_valence=sent._.valence
             )
 
-def svo_to_record(svo, docid=None, sentid=None):
+def svo_to_record(svo):
     """Convert *SVO* object to *SVO* record.
 
     Parameters
     ----------
     svo : tuple
         SVO tuple.
-    docid : str or None
-        Document id. Determined automatically if ``None``.
-    sentid : str or None
-        Sentence id. Determined automatically if ``None``.
     """
     return SVORecord(
         tense=svo.tense,
         mode=svo.mode,
         neg=svo.neg,
         rtype=svo.rtype,
-        subj=svo.subj.text,
-        verb=svo.verb.text,
-        obj=svo.obj.text,
+        subj=svo.subj.text.lower(),
+        verb=svo.verb.text.lower(),
+        obj=svo.obj.text.lower(),
         subj_lead=svo.subj._.lead.text.lower(),
         verb_lead=svo.verb._.lead.text.lower(),
         obj_lead=svo.obj._.lead.text.lower(),
@@ -272,8 +276,8 @@ def svo_to_record(svo, docid=None, sentid=None):
         sent_sentiment=svo.sent_sentiment,
         valence=svo.valence,
         sent_valence=svo.sent_valence,
-        docid=svo.verb.doc._.id if not docid else docid,
-        sentid=svo.verb.sent._.id if not sentid else sentid
+        docid=svo.verb.doc._.id,
+        sentid=svo.verb.sent._.id
     )
 
 def doc_to_svos_df(doc, columns=None):
@@ -289,4 +293,51 @@ def doc_to_svos_df(doc, columns=None):
     records = map(svo_to_record, get_svos(doc._.relations))
     columns = SVORecord._fields if not columns else columns
     df = pd.DataFrame.from_records(records, columns=columns)
+    return df
+
+def get_tokens(doc):
+    """Get tokens from a document.
+
+    Parameters
+    ----------
+    doc : spacy.tokens.Doc
+        Document object.
+    """
+    for token in doc._.tokens:
+        tense, mode = token._.tense
+        yield Token(
+            tense=tense,
+            mode=mode,
+            neg=token._.is_neg,
+            token=token.text.lower(),
+            lead=token.text.lower(),
+            lemma=token.lemma_,
+            pos=token._.drive.pos_,
+            dep=token._.drive.dep_,
+            ent=token._.is_ent,
+            ent_label=token.label_,
+            vector_norm=token.vector_norm,
+            vector=token.vector,
+            start=token.start,
+            end=token.end,
+            sentiment=token._.sentiment,
+            sent_sentiment=token.sent._.sentiment,
+            valence=token._.valence,
+            sent_valence=token.sent._.valence,
+            docid=token.doc._.id,
+            sentid=token.sent._.id
+        )
+
+def doc_to_tokens_df(doc, columns=None):
+    """Dump document to a tokens data frame.
+
+    Parameters
+    ----------
+    doc : spacy.tokens.Doc
+        Document object.
+    columns : iterable or None
+        If ``None``, then ``Token`` field names are used.
+    """
+    columns = Token._fields if not columns else columns
+    df = pd.DataFrame.from_records(get_tokens(doc), columns=columns)
     return df

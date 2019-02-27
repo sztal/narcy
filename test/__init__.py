@@ -6,6 +6,7 @@ from narcy.nlp import spacy_ext
 from narcy.nlp.utils import make_doc, Relation
 from narcy.processors import reduce_relations
 from narcy.processors import doc_to_relations_df, doc_to_svos_df
+from narcy.processors import doc_to_tokens_df
 
 _dirpath = os.path.join(os.path.split(__file__)[0], 'data')
 
@@ -32,5 +33,10 @@ def _test_doc_to_relations_df(doc, reduced):
 
 def _test_doc_to_svos_df(doc):
     df = doc_to_svos_df(doc)
+    assert isinstance(df, pd.DataFrame)
+    assert df.shape != (0, 0)
+
+def _test_doc_to_tokens_df(doc):
+    df = doc_to_tokens_df(doc)
     assert isinstance(df, pd.DataFrame)
     assert df.shape != (0, 0)

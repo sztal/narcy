@@ -280,6 +280,20 @@ def sentiment_s_g(span):
     scores = span._.polarity
     return scores['compound']*(1 - scores['neu'])
 
+def start_s_g(span):
+    return span.start - span.sent.start
+
+def end_s_g(span):
+    return span.end - span.sent.start
+
+def tokens_s_g(span):
+    i = 0
+    while i < len(span):
+        token = span[i]._.compound
+        if token._.drive._.is_wordlike:
+            yield token
+        i = token._.end
+
 
 # Doc extensions --------------------------------------------------------------
 
@@ -308,3 +322,7 @@ def valence_d_g(doc):
 def sentiment_d_g(doc):
     scores = doc._.polarity
     return scores['compound']*(1 - scores['neu'])
+
+def tokens_d_g(doc):
+    for sent in doc.sents:
+        yield from sent._.tokens
