@@ -7,6 +7,8 @@ from . import getters
 from ..utils import make_hash
 
 Doc.set_extension('_id', default=None)
+Doc.set_extension('_polarity', default=None)
+Span.set_extension('_polarity', default=None)
 
 extensions = defaultdict(lambda: defaultdict(dict))
 for name in dir(getters):
