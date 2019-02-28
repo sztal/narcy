@@ -50,39 +50,49 @@ Usage
 Currently there are two workhorse functions that converts documents
 into tidy data frames that describe all relations extracted from the text.
 
+``doc_to_tokens_df``
+    Dumps *spacy* ``Doc`` objects to *padas* data frames describing all
+    tokens from a given document.
+
 ``doc_to_relations``
-    This function dumps a *spacy* ``Doc`` objects to *pandas* data frames
+    Dumps *spacy* ``Doc`` objects to *pandas* data frames
     describing all relation or relation reducts (see following sections).
 
 ``doc_to_svos``
-    This function dumps a *spacy* ``Doc`` objects to *pandas* data frames
+    Dumps *spacy* ``Doc`` objects to *pandas* data frames
     describing all subject-verb-object triplets.
 
 
 Example
 -------
 
-First, load *Spacy* and extend it with *Narcy* extension attributes.
+First, load *Spacy* and prepare function for converting texts to parsed documents
+(at the same time *Spacy* is extended with *Narcy* extension attributes).
 Also import other functions that will be used later.
 
-.. code-block:: python
-
-    import spacy
-    from narcy.nlp import spacy_ext
-    from narcy.processors import doc_to_relations_df, doc_to_svos_df
-    from narcy.nlp.utils import make_doc
-
-Next, load text of some document and load *Spacy* NLP object with a language model.
-
+At this stage it also required to load a language models and setup a function
+for converting texts to documents.
 Better models - like ``'en_core_web_md'`` - may be necessary for proper word vectors.
 
 .. code-block:: python
 
-    text = load_text()
-    # Load NLP object and proper language model.
+    import spacy
+    from narcy import document_factory
+    from narcy import doc_to_relations_df, doc_to_svos_df, doc_to_tokens_df
+
+    # Load NLP object with language model.
     nlp = spacy.load('en_core_web_sm')
+    # Create function for converting texts to documents
+    make_doc = document_factory(nlp)
+
+Next, load text of some documen.
+
+
+.. code-block:: python
+
+    text = load_text()
     # Make document object with automatic normalization
-    doc = make_doc(nlp, text)
+    doc = make_doc(text)
 
 Now, tidy data may be extracted from the document.
 
@@ -91,6 +101,7 @@ Now, tidy data may be extracted from the document.
     relations_df = doc_to_relations_df(doc)
     relation_reducts_df = doc_to_relations_df(doc, reduced=True)
     svos_df = doc_to_svos_df(doc)
+    tokens_df = doc_to_tokens_df(doc)
 
 Voila!
 
@@ -131,11 +142,93 @@ Lead in the case of non-verbs is just a (compound) token itself.
 However, lead of a verb is its semantic part (the driving, that is, the final
 verb token in a compound verb + optional particle ending).
 
-Lematization in *Narcy* always operates on leads.
+Lemmatization in *Narcy* always operates on leads.
 
-
-Relations
+Sentiment
 ---------
+Currently *Narcy* uses Vader_ for sentiment analysis.
+
+
+Token data frame
+----------------
+Rows in a tokens data frame describe individual tokens.
+The following features are used:
+
+``tense``
+    Tense (``PAST``, ``PRESENT``, ``FUTURE``) of the token.
+
+``mode``
+    Mode (``NORMAL`` or ``MODAL``) of the token.
+
+``neg``
+    Token negation flag.
+
+``token``
+    Token text.
+
+``lead``
+    Token lead.
+
+``lemma``
+    Lemmatized token lead text.
+
+``pos``
+    Token ``POS`` tag.
+
+``dep``
+    Token syntactic dependency tag.
+
+``ent``
+    Token entitiy flag.
+
+``ent_label``
+    Token entity label.
+
+``vector_norm``
+    Token norm in the vector model.
+
+``vector``
+    Token vector in the vector model.
+
+``start``
+    Token start index in the document.
+
+``end``
+    Token end index in the document.
+
+``sentiment``
+    *Vader*-based sentiment score for the token.
+
+    It is computed as ``compound * (1 - neutral)``.
+
+``sentiment_sent``
+    *Vader*-based sentiment score for the sentence the token is in.
+
+    It is computed as ``compound * (1 - neutral)``.
+
+``valence``
+    Alternative *Vader*-based sentiment score for the token.
+
+    It is computed as ``(sqrt(positive) - sqrt(negative)) * sqrt(1 - compound)``.
+    It is likely it will be dropped in the future.
+
+``valence_sent``
+    Alternative *Vader*-based sentiment score for the sentence the token is in.
+
+    It is computed as ``(sqrt(positive) - sqrt(negative)) * sqrt(1 - compound)``.
+    It is likely it will be dropped in the future.
+
+``docid``
+    Document id based on MD5 hash of its content.
+    Computed only once per document.
+
+``sentid``
+    Document id appended with start and end indexes of the sentence.
+    It uniqualy identifies each sentence within a corpus of documents.
+
+
+Relations data frame
+--------------------
 Rows in relation data frames describe atomic relations between various tokens.
 They are described by the following features:
 
@@ -273,8 +366,30 @@ They are described by the following features:
 ``sub_start``
     Index of the beginning of the sub token-span in the document.
 
-``sub_ent``
+``sub_end``
     Index of the end of the sub token-span in the document.
+
+``sentiment``
+    *Vader*-based sentiment score for the entire relation subphrase.
+
+    It is computed as ``compound * (1 - neutral)``.
+
+``sentiment_sent``
+    *Vader*-based sentiment score for the sentence the relation is in.
+
+    It is computed as ``compound * (1 - neutral)``.
+
+``valence``
+    Alternative *Vader*-based sentiment score for the entire relation subphrase.
+
+    It is computed as ``(sqrt(positive) - sqrt(negative)) * sqrt(1 - compound)``.
+    It is likely it will be dropped in the future.
+
+``valence_sent``
+    Alternative *Vader*-based sentiment score for the sentence the relation is in.
+
+    It is computed as ``(sqrt(positive) - sqrt(negative)) * sqrt(1 - compound)``.
+    It is likely it will be dropped in the future.
 
 ``docid``
     Document id based on MD5 hash of its content.
@@ -292,8 +407,8 @@ are discarded whatsoever and *adpositions* are removed and their subs are
 transfered to their heads.
 
 
-Subject-verb-object triplets
-----------------------------
+Subject-verb-object triplets data frame
+---------------------------------------
 Rows in *SVO* data frames describe unique *subject-verb-object* triplets.
 They use the following features:
 
@@ -376,6 +491,28 @@ They use the following features:
 ``obj_vector``
     Word vector associated with the object token.
 
+``sentiment``
+    *Vader*-based sentiment score for the entire SVO subphrase.
+
+    It is computed as ``compound * (1 - neutral)``.
+
+``sentiment_sent``
+    *Vader*-based sentiment score for the sentence the SVO subphrase is in.
+
+    It is computed as ``compound * (1 - neutral)``.
+
+``valence``
+    Alternative *Vader*-based sentiment score for the entire SVO subphrase.
+
+    It is computed as ``(sqrt(positive) - sqrt(negative)) * sqrt(1 - compound)``.
+    It is likely it will be dropped in the future.
+
+``valence_sent``
+    Alternative *Vader*-based sentiment score for the sentence the SVO subphrase is in.
+
+    It is computed as ``(sqrt(positive) - sqrt(negative)) * sqrt(1 - compound)``.
+    It is likely it will be dropped in the future.
+
 ``docid``
     Document id.
 
@@ -385,3 +522,4 @@ They use the following features:
 
 
 .. _Spacy: https://spacy.io/
+.. _Vader: https://github.com/cjhutto/vaderSentiment

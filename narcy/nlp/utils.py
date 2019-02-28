@@ -1,19 +1,12 @@
 """Natural language processing utilities."""
 # pylint: disable=E0611
 # pylint: disable=R0911,R0912,R0914
-import re
+# pylint: disable=inconsistent-return-statements
 from collections import namedtuple
 import unicodedata
 import hashlib
 from .en.tenses import detect_tense as detect_tense_en
 from .tenses import PRESENT, NORMAL
-
-
-_ENT = ('B', 'I')
-
-_IS_RX = re.compile(r"^\Ws$", re.IGNORECASE)
-_WILL_RX = re.compile(r"^\Wll$", re.IGNORECASE)
-_IS_NOT = re.compile(r"^n\Wt$", re.IGNORECASE)
 
 
 Relation = namedtuple('Relation', [
@@ -217,7 +210,7 @@ def make_hash(*args):
     md5.update(string.encode())
     return md5.hexdigest()
 
-def make_doc(nlp, text, normalize_unicode=True):
+def document_factory(nlp):
     """Make document with normalized text.
 
     Parameters
@@ -229,23 +222,9 @@ def make_doc(nlp, text, normalize_unicode=True):
     normalize_unicode : bool
         Should string be unicode-normalized.
     """
-    def _text(x):
-        if x.is_punct:
-            text = x.lemma_
-        elif x._.is_verb and _IS_RX.match(x.text):
-            text = ' is'
-        elif x._.is_verb and _WILL_RX.match(x.text):
-            text = ' will'
-        elif x._.is_neg_dep and _IS_NOT.match(x.text):
-            text = ' not'
-        else:
-            text = x.text
+    def make_doc(text, normalize_unicode=True):
         if normalize_unicode:
             text = unicodedata.normalize('NFC', text)
-        return text
-    doc = nlp(text)
-    norm_text = ''
-    for token in doc:
-        text = _text(token)
-        norm_text += text + token.whitespace_
-    return nlp(norm_text)
+        doc = nlp(text)
+        return doc
+    return make_doc

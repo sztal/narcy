@@ -2,6 +2,7 @@
 # pylint: disable=W0611
 import pytest
 import en_core_web_sm
+from narcy import document_factory
 
 
 def pytest_addoption(parser):
@@ -41,5 +42,5 @@ def pytest_collection_modifyitems(config, items):
 # Fixtures --------------------------------------------------------------------
 
 @pytest.fixture(scope='session')
-def nlp():
-    return en_core_web_sm.load()
+def make_doc():
+    return document_factory(en_core_web_sm.load())
