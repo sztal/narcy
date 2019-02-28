@@ -166,14 +166,11 @@ The following features are used:
 ``token``
     Token text.
 
-``lemma``
-    Lemmatized token text.
-
 ``lead``
     Token lead.
 
-``lead_lemma``
-    Token lemmatized lead.
+``lemma``
+    Lemmatized token lead text.
 
 ``pos``
     Token ``POS`` tag.
