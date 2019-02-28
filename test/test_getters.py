@@ -3,7 +3,6 @@
 import pytest
 from pytest import approx
 import en_core_web_sm
-from narcy import spacy_ext, make_doc
 from narcy import doc_to_relations_df, doc_to_svos_df
 
 
@@ -15,8 +14,8 @@ data = [
 ]
 
 @pytest.mark.parametrize('text,nrow,sentiment', data)
-def test_lemma(text, nrow, sentiment, nlp):
-    doc = make_doc(nlp, text)
+def test_lemma(text, nrow, sentiment, make_doc):
+    doc = make_doc(text)
     df = doc_to_relations_df(doc)
     assert df.shape[0] == nrow
     assert doc._.sentiment == approx(sentiment)

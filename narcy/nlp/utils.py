@@ -210,7 +210,7 @@ def make_hash(*args):
     md5.update(string.encode())
     return md5.hexdigest()
 
-def make_doc(nlp, text, normalize_unicode=True):
+def document_factory(nlp):
     """Make document with normalized text.
 
     Parameters
@@ -222,12 +222,9 @@ def make_doc(nlp, text, normalize_unicode=True):
     normalize_unicode : bool
         Should string be unicode-normalized.
     """
-    if normalize_unicode:
-        text = unicodedata.normalize('NFC', text)
-    doc = nlp(text)
-    return doc
-#     norm_text = ''
-#     for token in doc:
-#         text = _text(token)
-#         norm_text += text + token.whitespace_
-#     return nlp(norm_text)
+    def make_doc(text, normalize_unicode=True):
+        if normalize_unicode:
+            text = unicodedata.normalize('NFC', text)
+        doc = nlp(text)
+        return doc
+    return make_doc
