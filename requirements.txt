@@ -9,3 +9,4 @@ pytest-benchmark>=3.1.1
 coverage>=4.5.1
 spacy>=2.0.18
 pandas>=0.23.4
+nltk>=3.4
