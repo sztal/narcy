@@ -6,12 +6,17 @@ from spacy.symbols import NOUN, PROPN, PRON, DET
 from spacy.symbols import VERB, PART
 from spacy.symbols import ADV, ADJ, ADP
 from spacy.symbols import SPACE, PUNCT
+import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from ..utils import get_compound_verb, get_compound_noun, get_entity_from_span
 from ..utils import get_relation, detect_tense, make_hash
 from ..tenses import PRESENT, NORMAL
 
-vader = SentimentIntensityAnalyzer()
+try:
+    vader = SentimentIntensityAnalyzer()
+except LookupError:
+    nltk.download('vader_lexicon')
+    vader = SentimentIntensityAnalyzer()
 
 _NOT_SEMANTIC = (DET, PRON, PART)
 _NOUN = (NOUN, PROPN)

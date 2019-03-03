@@ -47,7 +47,8 @@ setup(
     include_package_data=True,
     install_requires=[
         'spacy>=2.0.18',
-        'pandas>=0.23.4'
+        'pandas>=0.23.4',
+        'nltk>=3.4'
     ],
     license='MIT',
     zip_safe=False,
