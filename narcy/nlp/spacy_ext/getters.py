@@ -321,6 +321,8 @@ def tokens_s_g(span):
     i = 0
     while i < len(span):
         token = span[i]._.compound
+        if token._.start < i:
+            token = span[i:max(token._.end, i+1)]
         if token._.drive._.is_wordlike:
             yield token
         i = token._.end
