@@ -15,7 +15,7 @@ Record = namedtuple('Record', [
     'head_vector_norm', 'sub_vector_norm', 'head_vector', 'sub_vector',
     'head_start', 'head_end', 'sub_start', 'sub_end',
     'sentiment', 'sent_sentiment',
-    'valence', 'sent_valence',
+    # 'valence', 'sent_valence',
     'docid', 'sentid'
 ])
 
@@ -23,7 +23,7 @@ SVO = namedtuple('SVO', [
     'tense', 'mode', 'neg', 'rtype',
     'subj', 'subj_terms', 'verb', 'obj', 'obj_terms',
     'sentiment', 'sent_sentiment',
-    'valence', 'sent_valence'
+    # 'valence', 'sent_valence'
 ])
 
 SVORecord = namedtuple('SVORecord', [
@@ -37,7 +37,7 @@ SVORecord = namedtuple('SVORecord', [
     'subj_vector_norm', 'verb_vector_norm', 'obj_vector_norm',
     'subj_vector', 'verb_vector', 'obj_vector',
     'sentiment', 'sent_sentiment',
-    'valence', 'sent_valence',
+    # 'valence', 'sent_valence',
     'docid', 'sentid'
 ])
 
@@ -49,7 +49,7 @@ Token = namedtuple('Token', [
     'vector_norm', 'vector',
     'start', 'end',
     'sentiment', 'sent_sentiment',
-    'valence', 'sent_valence',
+    # 'valence', 'sent_valence',
     'docid', 'sentid'
 ])
 
@@ -108,8 +108,8 @@ def relation_to_record(r):
         sub_end=sub.end,
         sentiment=rel._.sentiment,
         sent_sentiment=sent._.sentiment,
-        valence=rel._.valence,
-        sent_valence=sent._.valence,
+        # valence=rel._.valence,
+        # sent_valence=sent._.valence,
         docid=docid,
         sentid=sentid
     )
@@ -235,8 +235,8 @@ def get_svos(relations):
                 obj_terms=obj_terms,
                 sentiment=rel._.sentiment,
                 sent_sentiment=sent._.sentiment,
-                valence=rel._.valence,
-                sent_valence=sent._.valence
+                # valence=rel._.valence,
+                # sent_valence=sent._.valence
             )
 
 def svo_to_record(svo):
@@ -258,9 +258,9 @@ def svo_to_record(svo):
         subj_lead=svo.subj._.lead.text.lower(),
         verb_lead=svo.verb._.lead.text.lower(),
         obj_lead=svo.obj._.lead.text.lower(),
-        subj_drive=svo.subj._.drive.text.lower(),
-        verb_drive=svo.verb._.drive.text.lower(),
-        obj_drive=svo.obj._.drive.text.lower(),
+        subj_drive=svo.subj._.drive._.lemma,
+        verb_drive=svo.verb._.drive._.lemma,
+        obj_drive=svo.obj._.drive._.lemma,
         subj_lemma=svo.subj._.lead._.lemma,
         verb_lemma=svo.verb._.lead._.lemma,
         obj_lemma=svo.obj._.lead._.lemma,
@@ -278,8 +278,8 @@ def svo_to_record(svo):
         obj_vector=svo.obj.vector,
         sentiment=svo.sentiment,
         sent_sentiment=svo.sent_sentiment,
-        valence=svo.valence,
-        sent_valence=svo.sent_valence,
+        # valence=svo.valence,
+        # sent_valence=svo.sent_valence,
         docid=svo.verb.doc._.id,
         sentid=svo.verb.sent._.id
     )
@@ -326,8 +326,8 @@ def get_tokens(doc):
             end=token.end,
             sentiment=token._.sentiment,
             sent_sentiment=token.sent._.sentiment,
-            valence=token._.valence,
-            sent_valence=token.sent._.valence,
+            # valence=token._.valence,
+            # sent_valence=token.sent._.valence,
             docid=token.doc._.id,
             sentid=token.sent._.id
         )
